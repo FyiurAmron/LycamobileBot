@@ -34,9 +34,10 @@ public record Usage {
 
 public record UsageData {
     public string remaining;
+    public string until;
 
     public override string ToString()
-        => $"remaining: {remaining}\n";
+        => $"remaining: {remaining}\n{until}\n";
 }
 
 public static class DebuggingExtensions {
@@ -138,7 +139,7 @@ public class Program {
         }
 
         requestMessage = new() {
-            RequestUri = new UriRelative( $"en/my-account/" )
+            RequestUri = new UriRelative( "en/my-account/" )
         };
         responseMessage = httpClient.Send( requestMessage );
 
@@ -148,17 +149,22 @@ public class Program {
 
         string myAccountHtml = responseMessage.Content.ReadAsStringAsync().Result;
 
-        Regex regex = new( "<div class=\"bdl-mins\">\\s*([0-9]*.[0-9]*[A-Z]*)<\\/div>", RegexOptions.Compiled );
+        Regex regexRemaining = new(
+            "<span>\\| International(Valid till [0-9]{2}-[0-9]{2}-[0-9]{4})<\\/span>" +
+            ".*" +
+            "<div class=\"bdl-mins\">\\s*([0-9]*.[0-9]*[A-Z]*)<\\/div>",
+            RegexOptions.Compiled | RegexOptions.Singleline );
 
-        GroupCollection groups = regex.Match( myAccountHtml ).Groups;
+        GroupCollection groups = regexRemaining.Match( myAccountHtml ).Groups;
 
-        if ( groups.Count < 2 ) {
+        if ( groups.Count < 3 ) {
             throw new HttpRequestException( "can't parse response HTML" );
         }
 
         Usage usage = new() {
             data = new() {
-                remaining = groups[1].Value
+                until = groups[1].Value,
+                remaining = groups[2].Value,
             }
         };
 
