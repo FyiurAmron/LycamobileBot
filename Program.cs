@@ -33,11 +33,14 @@ public record Usage {
 }
 
 public record UsageData {
+    public string number;
     public string remaining;
     public string until;
 
     public override string ToString()
-        => $"remaining: {remaining}\n{until}\n";
+        => $"{number}\n"
+            + $"remaining: {remaining}\n"
+            + $"{until}\n";
 }
 
 public static class DebuggingExtensions {
@@ -103,13 +106,18 @@ public class Program {
 
         DialogResult dialogResult;
         do {
-            Usage usage = fetchUsage();
+            string[] numbers = env["NUMBER"].Split( ',' );
+            string usageText = numbers.Select(
+                n => "" + fetchUsage( n, env["PASSWORD"] ).data
+            ).Aggregate(
+                ( a, b ) => $"{a}\n{b}"
+            );
 
-            Console.WriteLine( usage.data );
+            Console.WriteLine( usageText );
 
             dialogResult = MessageBox.Show(
                 mainForm,
-                $"{usage.data}",
+                usageText,
                 appName,
                 MessageBoxButtons.RetryCancel,
                 MessageBoxIcon.Information
@@ -119,7 +127,7 @@ public class Program {
         // end
     }
 
-    private static Usage fetchUsage() {
+    private static Usage fetchUsage( string number, string password ) {
         HttpRequestMessage requestMessage;
         HttpResponseMessage responseMessage;
 
@@ -129,8 +137,8 @@ public class Program {
             Content = new FormUrlEncodedContent( new Dictionary<string, string>() {
                 ["action"] = "lyca_login_ajax",
                 ["method"] = "login",
-                ["mobile_no"] = env["NUMBER"],
-                ["pass"] = env["PASSWORD"]
+                ["mobile_no"] = number,
+                ["pass"] = password
             } )
         };
         responseMessage = httpClient.Send( requestMessage );
@@ -163,8 +171,9 @@ public class Program {
 
         Usage usage = new() {
             data = new() {
+                number = "+" + number,
                 until = groups[1].Value,
-                remaining = groups[2].Value,
+                remaining = groups[2].Value
             }
         };
 
