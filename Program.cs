@@ -81,7 +81,7 @@ public class Program {
                 Size = new( 0, 0 ),
                 StartPosition = FormStartPosition.Manual,
                 Location = new( 0, 0 ),
-                Text = appName
+                Text = appName,
             };
             mainForm.Show();
             runApp( mainForm );
@@ -138,8 +138,8 @@ public class Program {
                 ["action"] = "lyca_login_ajax",
                 ["method"] = "login",
                 ["mobile_no"] = number,
-                ["pass"] = password
-            } )
+                ["pass"] = password,
+            } ),
         };
         responseMessage = httpClient.Send( requestMessage );
         if ( !responseMessage.StatusCode.isOk() ) {
@@ -147,7 +147,7 @@ public class Program {
         }
 
         requestMessage = new() {
-            RequestUri = new UriRelative( "en/my-account/" )
+            RequestUri = new UriRelative( "en/my-account/" ),
         };
         responseMessage = httpClient.Send( requestMessage );
 
@@ -173,8 +173,8 @@ public class Program {
             data = new() {
                 number = "+" + number,
                 until = groups[1].Value,
-                remaining = groups[2].Value
-            }
+                remaining = groups[2].Value,
+            },
         };
 
         return usage;
